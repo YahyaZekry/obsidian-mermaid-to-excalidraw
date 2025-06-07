@@ -17,7 +17,44 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
   const excalidrawElements: any[] = [];
 
   for (const element of customElements) {
-    // Add the shape element (without label)
+    console.log("DEBUG: Processing element:", element);
+
+    // Handle image elements (for gantt, pie, etc. that render as images)
+    if (element.type === "image") {
+      const imageElement = {
+        id: element.id,
+        type: "image",
+        x: element.x || 0,
+        y: element.y || 0,
+        width: element.width || 400,
+        height: element.height || 300,
+        angle: 0,
+        strokeColor: "transparent",
+        backgroundColor: "transparent",
+        fillStyle: "solid",
+        strokeWidth: 0,
+        strokeStyle: "solid",
+        roughness: 0,
+        opacity: 100,
+        groupIds: [],
+        frameId: null,
+        roundness: null,
+        seed: Math.floor(Math.random() * 1000000),
+        versionNonce: Math.floor(Math.random() * 1000000),
+        isDeleted: false,
+        boundElements: null,
+        updated: 1,
+        link: null,
+        locked: false,
+        fileId: element.fileId, // Critical for image elements
+        scale: [1, 1],
+      };
+
+      excalidrawElements.push(imageElement);
+      continue;
+    }
+
+    // Handle regular shape elements
     const shapeElement = {
       id: element.id,
       type: element.type,
@@ -437,7 +474,10 @@ ${base64EncodedData}
 
   isUnsupportedDiagramType(diagramType: string): boolean {
     // List of diagram types that are known to have issues with the conversion library
-    const unsupportedTypes = ["gitgraph"]; // gitgraph is not recognized
+    const unsupportedTypes = [
+      "gitgraph", // gitgraph is not recognized by the library
+      "class", // class diagrams have lexical parsing issues with relationship syntax
+    ];
     return unsupportedTypes.includes(diagramType);
   }
 
@@ -447,11 +487,21 @@ ${base64EncodedData}
 
     // Fix class diagram relationship syntax issues
     if (diagramCode.toLowerCase().includes("classdiagram")) {
-      // The error is in the relationship syntax - let's try to fix it
-      processedCode = processedCode.replace(/\|\|--o\{/g, "||--o{");
-      processedCode = processedCode.replace(/\}o--o\{/g, "}o--o{");
+      // The error is on line 35 with "User ||--o{ Order : place" - missing 's' in 'places'
+      // Looking at the error, it seems to be a truncation issue in the error message
+      // Let's fix the relationship lines more comprehensively
 
-      console.log("DEBUG: Applied class diagram fixes");
+      // Fix spacing around relationship operators
+      processedCode = processedCode.replace(/\s*\|\|--o\{\s*/g, " ||--o{ ");
+      processedCode = processedCode.replace(/\s*\}o--o\{\s*/g, " }o--o{ ");
+
+      // Add proper spacing around colons in relationships
+      processedCode = processedCode.replace(/\s*:\s*/g, " : ");
+
+      // Ensure proper line endings
+      processedCode = processedCode.replace(/\r\n/g, "\n");
+
+      console.log("DEBUG: Applied comprehensive class diagram fixes");
     }
 
     return processedCode;
