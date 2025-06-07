@@ -380,7 +380,15 @@ ${base64EncodedData}
           config
         );
 
-        console.log(`DEBUG: Diagram ${i + 1} - Raw elements:`, elements);
+        // Detailed logging for sequence diagrams
+        if (diagramType === "sequence") {
+          console.log(
+            `DEBUG: Diagram ${i + 1} (Sequence) - Raw elements from core-lib:`,
+            JSON.stringify(elements, null, 2)
+          );
+        } else {
+          console.log(`DEBUG: Diagram ${i + 1} - Raw elements:`, elements);
+        }
         console.log(`DEBUG: Diagram ${i + 1} - Raw files:`, files);
 
         // Transform custom elements to proper Excalidraw format
@@ -521,7 +529,7 @@ ${base64EncodedData}
     const unsupportedTypes = [
       "gitgraph", // gitgraph is not recognized by the library
       "class", // class diagrams have lexical parsing issues with relationship syntax
-      "sequence", // Sequence diagrams are complex and current core-lib output is insufficient
+      // "sequence", // Re-enable sequence diagrams for detailed logging
     ];
     return unsupportedTypes.includes(diagramType);
   }
