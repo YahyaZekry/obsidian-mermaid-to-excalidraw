@@ -22,11 +22,11 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
     // Handle image elements (for gantt, pie, etc. that render as images)
     if (element.type === "image") {
       console.log(
-        `DEBUG: Image element found. Original fileId: ${element.fileId}`,
+        `DEBUG: Image element found. Original fileId: ${element.fileId}. Original element.id: ${element.id}`,
         element
       );
       const imageElement = {
-        id: element.id,
+        id: element.id, // This should be the ID from the core-lib element
         type: "image",
         x: element.x || 0,
         y: element.y || 0,
