@@ -136,6 +136,16 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
         }
       },
     });
+
+    // Add ribbon icon for bulk conversion
+    this.addRibbonIcon(
+      "workflow",
+      "Convert All Mermaid Diagrams in File",
+      () => {
+        this.bulkConvertMermaidDiagrams();
+      }
+    );
+
     this.addSettingTab(new MermaidToExcalidrawSettingTab(this.app, this));
   }
 
@@ -255,6 +265,157 @@ ${base64EncodedData}
       new Notice(`Error converting diagram: ${(error as Error).message}`);
       console.error(error);
     }
+  }
+
+  async bulkConvertMermaidDiagrams() {
+    // Get active file and editor
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!activeView) {
+      new Notice("No active markdown file found");
+      return;
+    }
+
+    // Get file content
+    const fileContent = activeView.editor.getValue();
+    console.log("DEBUG: Full file content:", fileContent);
+
+    // Find all Mermaid blocks
+    const mermaidBlocks = this.extractMermaidBlocks(fileContent);
+    console.log("DEBUG: Found mermaid blocks:", mermaidBlocks);
+
+    if (mermaidBlocks.length === 0) {
+      new Notice("No Mermaid diagrams found in this file");
+      return;
+    }
+
+    // Convert each block
+    let successful = 0;
+    let failed = 0;
+    const baseFileName = activeView.file?.basename || "Unknown";
+
+    for (let i = 0; i < mermaidBlocks.length; i++) {
+      try {
+        const diagramCode = mermaidBlocks[i];
+        console.log(`DEBUG: Converting diagram ${i + 1}:`, diagramCode);
+
+        // Use the same conversion logic as the working command
+        const config = {
+          themeVariables: {
+            fontSize: "16px",
+          },
+        };
+
+        const { elements, files } = await parseMermaidToExcalidraw(
+          diagramCode,
+          config
+        );
+
+        console.log(`DEBUG: Diagram ${i + 1} - Raw elements:`, elements);
+        console.log(`DEBUG: Diagram ${i + 1} - Raw files:`, files);
+
+        // Transform custom elements to proper Excalidraw format
+        const transformedElements = transformToExcalidrawElements(
+          elements || []
+        );
+        console.log(
+          `DEBUG: Diagram ${i + 1} - Transformed elements:`,
+          transformedElements
+        );
+
+        const excalidrawData = {
+          type: "excalidraw",
+          version: 2,
+          source: "obsidian-mermaid-to-excalidraw",
+          elements: transformedElements,
+          files: files || {},
+          appState: {
+            viewBackgroundColor: "#ffffff",
+            currentItemStrokeColor: "#1e1e1e",
+            currentItemBackgroundColor: "transparent",
+            currentItemFillStyle: "solid",
+            currentItemStrokeWidth: 2,
+            currentItemStrokeStyle: "solid",
+            currentItemRoughness: 1,
+            currentItemOpacity: 100,
+            currentItemFontFamily: 1,
+            currentItemFontSize: 20,
+            currentItemTextAlign: "left",
+            currentItemStartArrowhead: null,
+            currentItemEndArrowhead: "arrow",
+            scrollX: 0,
+            scrollY: 0,
+            zoom: {
+              value: 1,
+            },
+            currentItemRoundness: "round",
+            gridSize: null,
+            gridColor: {
+              Bold: "#C9C9C9FF",
+              Regular: "#EDEDEDFF",
+            },
+            currentStrokeOptions: null,
+            previousGridSize: null,
+            frameRendering: {
+              enabled: true,
+              clip: true,
+              name: true,
+              outline: true,
+            },
+          },
+        };
+
+        const fileName = `${baseFileName}-Diagram-${i + 1}.excalidraw.md`;
+        const jsonString = JSON.stringify(excalidrawData, null, 2);
+        const base64EncodedData = LZString.compressToBase64(jsonString);
+
+        const fileContent = `---
+excalidraw-plugin: parsed
+tags: [excalidraw]
+---
+
+==⚠  Switch to EXCALIDRAW VIEW in the MORE OPTIONS menu of this document. ⚠==
+
+## Drawing
+\`\`\`compressed-json
+${base64EncodedData}
+\`\`\`
+%%`;
+
+        await this.app.vault.create(fileName, fileContent);
+        console.log(`DEBUG: Successfully created file: ${fileName}`);
+        successful++;
+      } catch (error) {
+        console.error(`ERROR: Failed to convert diagram ${i + 1}:`, error);
+        failed++;
+      }
+    }
+
+    // Show summary
+    new Notice(
+      `Converted ${successful} diagrams${
+        failed > 0 ? `, ${failed} failed` : ""
+      }`
+    );
+  }
+
+  extractMermaidBlocks(content: string): string[] {
+    // Regex to match ```mermaid...``` blocks
+    const mermaidRegex = /```mermaid([\s\S]*?)```/g;
+    const blocks: string[] = [];
+    let match;
+
+    console.log("DEBUG: Starting regex search for mermaid blocks");
+
+    while ((match = mermaidRegex.exec(content)) !== null) {
+      const diagramContent = match[1].trim();
+      console.log("DEBUG: Found mermaid block:", diagramContent);
+      if (diagramContent) {
+        blocks.push(diagramContent);
+      }
+    }
+
+    console.log("DEBUG: Total blocks found:", blocks.length);
+    return blocks;
   }
 }
 
