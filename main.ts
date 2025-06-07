@@ -102,10 +102,9 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
       const compressedData = pako.deflate(jsonString);
       const base64EncodedData = uint8ArrayToBase64(compressedData);
 
-      // New structure with actual compression and updated frontmatter
+      // New structure with actual compression and simplified frontmatter for testing compatibility
       const fileContent = `---
-excalidraw-plugin: parsed
-tags: [excalidraw]
+type: excalidraw
 ---
 
 ## Drawing
