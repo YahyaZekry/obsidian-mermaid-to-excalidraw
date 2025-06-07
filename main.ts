@@ -86,12 +86,18 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
       };
 
       const fileName = `Converted-Mermaid-${Date.now()}.excalidraw.md`;
-      // Ensure the excalidraw JSON block is correctly formatted for Obsidian
-      const fileContent = `---\ntype: excalidraw\n---\n\n\`\`\`json\n${JSON.stringify(
-        excalidrawData,
-        null,
-        2
-      )}\n\`\`\``;
+      // New structure based on user feedback
+      // Frontmatter might still be useful for Obsidian to recognize the file type,
+      // but the core content structure is ## Drawing with compressed-json block.
+      const fileContent = `---
+type: excalidraw
+---
+
+## Drawing
+\`\`\`compressed-json
+${JSON.stringify(excalidrawData, null, 2)}
+\`\`\`
+%%`;
       await this.app.vault.create(fileName, fileContent);
       new Notice(`Converted to ${fileName}`);
     } catch (error) {
