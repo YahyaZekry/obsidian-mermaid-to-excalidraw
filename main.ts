@@ -26,8 +26,12 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
         `DEBUG: Image element found. Original fileId: ${element.fileId}. Original element.id: ${element.id}`,
         element
       );
-      const imageElement = {
-        id: element.id || nanoid(), // Ensure an ID exists, generate if undefined
+      const newElementId = element.id || nanoid(); // ID for the Excalidraw element itself
+      const newFileId = nanoid(); // New FileId for Excalidraw's internal file referencing
+
+      const imageElement: any = {
+        // Add 'any' to allow temporary property
+        id: newElementId,
         type: "image",
         x: element.x || 0,
         y: element.y || 0,
@@ -51,10 +55,14 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
         updated: 1,
         link: null,
         locked: false,
-        fileId: element.fileId, // Critical for image elements
+        fileId: newFileId, // Use the new nanoid for Excalidraw element's fileId
         scale: [1, 1],
+        originalFileId: element.fileId, // Store original to re-map files object later
       };
-      console.log("DEBUG: Created Excalidraw image element:", imageElement);
+      console.log(
+        "DEBUG: Created Excalidraw image element (pre-file-remapping):",
+        imageElement
+      );
       excalidrawElements.push(imageElement);
       continue;
     }
@@ -389,12 +397,35 @@ ${base64EncodedData}
           files
         ); // Log the files object
 
+        // Re-map the files object to use the new fileIds generated for image elements
+        const finalFiles: Record<string, any> = {};
+        if (files) {
+          for (const el of transformedElements) {
+            if (
+              el.type === "image" &&
+              el.originalFileId &&
+              files[el.originalFileId]
+            ) {
+              const newFileId = el.fileId; // This is the nanoid we generated
+              finalFiles[newFileId] = {
+                ...files[el.originalFileId],
+                id: newFileId, // Ensure the id inside the file data also matches
+              };
+              delete el.originalFileId; // Clean up temporary property
+            }
+          }
+        }
+        console.log(
+          `DEBUG: Diagram ${i + 1} - Remapped files object for Excalidraw:`,
+          finalFiles
+        );
+
         const excalidrawData = {
           type: "excalidraw",
           version: 2,
           source: "obsidian-mermaid-to-excalidraw",
           elements: transformedElements,
-          files: files || {}, // Ensure files is an object
+          files: finalFiles, // Use the re-mapped files object
           appState: {
             viewBackgroundColor: "#ffffff",
             currentItemStrokeColor: "#1e1e1e",
