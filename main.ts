@@ -8,8 +8,19 @@ import {
   PluginSettingTab,
   Setting,
 } from "obsidian";
+import pako from "pako";
 // import mermaid from 'mermaid'; // Potentially unused if core-lib handles it
 import { parseMermaidToExcalidraw } from "./core-lib"; // Assuming index.ts in core-lib exports this
+
+// Helper function to convert Uint8Array to base64
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
 
 export default class MermaidToExcalidrawPlugin extends Plugin {
   async onload() {
@@ -86,16 +97,20 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
       };
 
       const fileName = `Converted-Mermaid-${Date.now()}.excalidraw.md`;
-      // New structure based on user feedback
-      // Frontmatter might still be useful for Obsidian to recognize the file type,
-      // but the core content structure is ## Drawing with compressed-json block.
+
+      const jsonString = JSON.stringify(excalidrawData, null, 2);
+      const compressedData = pako.deflate(jsonString);
+      const base64EncodedData = uint8ArrayToBase64(compressedData);
+
+      // New structure with actual compression and updated frontmatter
       const fileContent = `---
-type: excalidraw
+excalidraw-plugin: parsed
+tags: [excalidraw]
 ---
 
 ## Drawing
 \`\`\`compressed-json
-${JSON.stringify(excalidrawData, null, 2)}
+${base64EncodedData}
 \`\`\`
 %%`;
       await this.app.vault.create(fileName, fileContent);
