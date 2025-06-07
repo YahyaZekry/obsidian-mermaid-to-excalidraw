@@ -21,6 +21,10 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
 
     // Handle image elements (for gantt, pie, etc. that render as images)
     if (element.type === "image") {
+      console.log(
+        `DEBUG: Image element found. Original fileId: ${element.fileId}`,
+        element
+      );
       const imageElement = {
         id: element.id,
         type: "image",
@@ -49,7 +53,7 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
         fileId: element.fileId, // Critical for image elements
         scale: [1, 1],
       };
-
+      console.log("DEBUG: Created Excalidraw image element:", imageElement);
       excalidrawElements.push(imageElement);
       continue;
     }
@@ -378,6 +382,11 @@ ${base64EncodedData}
           `DEBUG: Diagram ${i + 1} - Transformed elements:`,
           transformedElements
         );
+
+        console.log(
+          `DEBUG: Diagram ${i + 1} - Final files object for Excalidraw:`,
+          files
+        ); // Log the files object
 
         const excalidrawData = {
           type: "excalidraw",
