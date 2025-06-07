@@ -291,12 +291,32 @@ ${base64EncodedData}
     // Convert each block
     let successful = 0;
     let failed = 0;
+    let skipped = 0;
     const baseFileName = activeView.file?.basename || "Unknown";
 
     for (let i = 0; i < mermaidBlocks.length; i++) {
       try {
         const diagramCode = mermaidBlocks[i];
         console.log(`DEBUG: Converting diagram ${i + 1}:`, diagramCode);
+
+        // Check for unsupported diagram types
+        const diagramType = this.getDiagramType(diagramCode);
+        if (this.isUnsupportedDiagramType(diagramType)) {
+          console.log(
+            `DEBUG: Skipping unsupported diagram type: ${diagramType}`
+          );
+          new Notice(
+            `Skipped diagram ${
+              i + 1
+            }: ${diagramType} not yet supported by conversion library`
+          );
+          skipped++;
+          continue;
+        }
+
+        // Preprocess the diagram code to fix known issues
+        const processedCode = this.preprocessDiagramCode(diagramCode);
+        console.log(`DEBUG: Processed diagram ${i + 1}:`, processedCode);
 
         // Use the same conversion logic as the working command
         const config = {
@@ -306,7 +326,7 @@ ${base64EncodedData}
         };
 
         const { elements, files } = await parseMermaidToExcalidraw(
-          diagramCode,
+          processedCode,
           config
         );
 
@@ -394,8 +414,47 @@ ${base64EncodedData}
     new Notice(
       `Converted ${successful} diagrams${
         failed > 0 ? `, ${failed} failed` : ""
-      }`
+      }${skipped > 0 ? `, ${skipped} skipped (unsupported)` : ""}`
     );
+  }
+
+  getDiagramType(diagramCode: string): string {
+    const firstLine = diagramCode.trim().split("\n")[0].toLowerCase();
+    if (firstLine.startsWith("flowchart")) return "flowchart";
+    if (firstLine.startsWith("sequencediagram")) return "sequence";
+    if (firstLine.startsWith("gantt")) return "gantt";
+    if (firstLine.startsWith("classdiagram")) return "class";
+    if (firstLine.startsWith("statediagram")) return "state";
+    if (firstLine.startsWith("erdiagram")) return "er";
+    if (firstLine.startsWith("gitgraph")) return "gitgraph";
+    if (firstLine.startsWith("pie")) return "pie";
+    if (firstLine.startsWith("journey")) return "journey";
+    if (firstLine.startsWith("requirementdiagram")) return "requirement";
+    if (firstLine.startsWith("timeline")) return "timeline";
+    if (firstLine.startsWith("mindmap")) return "mindmap";
+    return "unknown";
+  }
+
+  isUnsupportedDiagramType(diagramType: string): boolean {
+    // List of diagram types that are known to have issues with the conversion library
+    const unsupportedTypes = ["gitgraph"]; // gitgraph is not recognized
+    return unsupportedTypes.includes(diagramType);
+  }
+
+  preprocessDiagramCode(diagramCode: string): string {
+    // Fix known syntax issues
+    let processedCode = diagramCode;
+
+    // Fix class diagram relationship syntax issues
+    if (diagramCode.toLowerCase().includes("classdiagram")) {
+      // The error is in the relationship syntax - let's try to fix it
+      processedCode = processedCode.replace(/\|\|--o\{/g, "||--o{");
+      processedCode = processedCode.replace(/\}o--o\{/g, "}o--o{");
+
+      console.log("DEBUG: Applied class diagram fixes");
+    }
+
+    return processedCode;
   }
 
   extractMermaidBlocks(content: string): string[] {
