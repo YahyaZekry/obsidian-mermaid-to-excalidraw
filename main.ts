@@ -167,21 +167,21 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
         config
       );
 
-      console.log(
-        "Obsidian Mermaid to Excalidraw: Conversion result - elements:",
-        JSON.stringify(elements, null, 2)
-      );
-      console.log(
-        "Obsidian Mermaid to Excalidraw: Conversion result - files:",
-        JSON.stringify(files, null, 2)
-      );
+      // console.log(
+      //   "Obsidian Mermaid to Excalidraw: Conversion result - elements:",
+      //   JSON.stringify(elements, null, 2)
+      // );
+      // console.log(
+      //   "Obsidian Mermaid to Excalidraw: Conversion result - files:",
+      //   JSON.stringify(files, null, 2)
+      // );
 
       // Transform custom elements to proper Excalidraw format
       const transformedElements = transformToExcalidrawElements(elements || []);
-      console.log(
-        "Obsidian Mermaid to Excalidraw: Transformed elements:",
-        JSON.stringify(transformedElements, null, 2)
-      );
+      // console.log(
+      //   "Obsidian Mermaid to Excalidraw: Transformed elements:",
+      //   JSON.stringify(transformedElements, null, 2)
+      // );
 
       const excalidrawData = {
         type: "excalidraw",
@@ -244,10 +244,10 @@ tags: [excalidraw]
 ${base64EncodedData}
 \`\`\`
 %%`;
-      console.log(
-        "Obsidian Mermaid to Excalidraw: Attempting to create file:",
-        fileName
-      ); // DEBUG
+      // console.log(
+      //   "Obsidian Mermaid to Excalidraw: Attempting to create file:",
+      //   fileName
+      // ); // DEBUG
       // console.log("Obsidian Mermaid to Excalidraw: File content preview (first 200 chars):", fileContent.substring(0, 200)); // DEBUG
       await this.app.vault.create(fileName, fileContent);
       new Notice(`Converted to ${fileName}`);
