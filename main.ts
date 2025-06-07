@@ -15,8 +15,8 @@ import { parseMermaidToExcalidraw } from "./core-lib"; // Assuming index.ts in c
 export default class MermaidToExcalidrawPlugin extends Plugin {
   async onload() {
     this.addCommand({
-      id: "convert-mermaid-to-excalidraw",
-      name: "Convert Mermaid to Excalidraw",
+      id: "convert-mermaid-to-excalidraw-new-file", // Changed ID for uniqueness
+      name: "Convert Mermaid to New Excalidraw File (MtoE)", // Changed name for uniqueness
       editorCallback: (
         editor: Editor,
         ctx: MarkdownView | MarkdownFileInfo
