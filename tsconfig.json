@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": ["es2018", "dom"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node"
+  },
+  "include": ["main.ts", "core-lib/**/*.ts"],
+  "exclude": ["node_modules", "main.js"]
+}

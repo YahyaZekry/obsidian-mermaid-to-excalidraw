@@ -72,7 +72,7 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
       await this.app.vault.create(fileName, fileContent);
       new Notice(`Converted to ${fileName}`);
     } catch (error) {
-      new Notice(`Error converting diagram: ${error.message}`);
+      new Notice(`Error converting diagram: ${(error as Error).message}`);
       console.error(error);
     }
   }

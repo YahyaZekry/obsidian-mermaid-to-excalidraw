@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME#readme",
   "dependencies": {
+    "@excalidraw/excalidraw": "0.17.1-7381-cdf6d3e",
     "@excalidraw/markdown-to-text": "0.1.2",
     "mermaid": "10.9.0",
     "nanoid": "4.0.2"
