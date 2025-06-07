@@ -64,14 +64,14 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
         config
       );
 
-      // console.log(
-      //   "Obsidian Mermaid to Excalidraw: Conversion result - elements:",
-      //   JSON.stringify(elements, null, 2)
-      // );
-      // console.log(
-      //   "Obsidian Mermaid to Excalidraw: Conversion result - files:",
-      //   JSON.stringify(files, null, 2)
-      // );
+      console.log(
+        "Obsidian Mermaid to Excalidraw: Conversion result - elements:",
+        JSON.stringify(elements, null, 2)
+      );
+      console.log(
+        "Obsidian Mermaid to Excalidraw: Conversion result - files:",
+        JSON.stringify(files, null, 2)
+      );
 
       const excalidrawData = {
         type: "excalidraw",
