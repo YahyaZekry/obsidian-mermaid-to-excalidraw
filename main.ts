@@ -8,19 +8,9 @@ import {
   PluginSettingTab,
   Setting,
 } from "obsidian";
-import pako from "pako";
+import LZString from "lz-string";
 // import mermaid from 'mermaid'; // Potentially unused if core-lib handles it
 import { parseMermaidToExcalidraw } from "./core-lib"; // Assuming index.ts in core-lib exports this
-
-// Helper function to convert Uint8Array to base64
-function uint8ArrayToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
 
 export default class MermaidToExcalidrawPlugin extends Plugin {
   async onload() {
@@ -99,10 +89,10 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
       const fileName = `Converted-Mermaid-${Date.now()}.excalidraw.md`;
 
       const jsonString = JSON.stringify(excalidrawData, null, 2);
-      const compressedData = pako.deflate(jsonString);
-      const base64EncodedData = uint8ArrayToBase64(compressedData);
+      // Use LZString for compression to match Excalidraw's typical format
+      const base64EncodedData = LZString.compressToBase64(jsonString);
 
-      // New structure with actual compression and simplified frontmatter for testing compatibility
+      // New structure with actual compression and updated frontmatter
       const fileContent = `---
 type: excalidraw
 ---
