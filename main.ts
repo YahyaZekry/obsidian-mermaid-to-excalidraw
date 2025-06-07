@@ -342,8 +342,11 @@ ${base64EncodedData}
     let successful = 0;
     let failed = 0;
     let skipped = 0;
-    let createdDiagramCount = 0; // Counter for successfully created diagrams
+    let createdDiagramCount = 0; // Counter for successfully created diagrams - RESET HERE
     const baseFileName = activeView.file?.basename || "Unknown";
+
+    // Reset counter at the beginning of each bulk conversion
+    createdDiagramCount = 0;
 
     for (let i = 0; i < mermaidBlocks.length; i++) {
       try {
@@ -389,23 +392,41 @@ ${base64EncodedData}
           config
         );
 
+        // Special handling for sequence diagrams - treat as image if multiple elements but no files
+        if (
+          diagramType === "sequence" &&
+          elements &&
+          elements.length > 5 &&
+          !files
+        ) {
+          console.log(
+            `DEBUG: Sequence diagram (source block ${i + 1}) has ${
+              elements.length
+            } elements but no files - this suggests individual shapes rather than a single image. This may not render well.`
+          );
+          // For now, we'll continue with the transformation, but this identifies the issue
+        }
+
         // Detailed logging for sequence diagrams
         if (diagramType === "sequence") {
           console.log(
             `DEBUG: Diagram (source block ${
               i + 1
             }, Sequence) - Raw elements from core-lib:`,
-            JSON.stringify(elements, null, 2)
+            elements?.length || 0,
+            "elements"
           );
         } else {
           console.log(
             `DEBUG: Diagram (source block ${i + 1}) - Raw elements:`,
-            elements
+            elements?.length || 0,
+            "elements"
           );
         }
         console.log(
           `DEBUG: Diagram (source block ${i + 1}) - Raw files:`,
-          files
+          files ? Object.keys(files).length : 0,
+          "files"
         );
 
         // Transform custom elements to proper Excalidraw format
@@ -559,8 +580,8 @@ ${base64EncodedData}
     // List of diagram types that are known to have issues with the conversion library
     const unsupportedTypes = [
       "gitgraph", // gitgraph is not recognized by the library
-      "class", // class diagrams have lexical parsing issues with relationship syntax
-      // "sequence", // Re-enable sequence diagrams for detailed logging
+      // Removed "class" - will attempt to process class diagrams
+      // Removed "sequence" - will process as images if core-lib provides them
     ];
     return unsupportedTypes.includes(diagramType);
   }

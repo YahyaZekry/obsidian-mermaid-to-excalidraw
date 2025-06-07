@@ -7,3 +7,5 @@ main.js
 # Optional: IDE / OS specific files
 .DS_Store
 *.log
+
+mermaid-to-excalidraw-master/
