@@ -342,12 +342,17 @@ ${base64EncodedData}
     let successful = 0;
     let failed = 0;
     let skipped = 0;
+    let createdDiagramCount = 0; // Counter for successfully created diagrams
     const baseFileName = activeView.file?.basename || "Unknown";
 
     for (let i = 0; i < mermaidBlocks.length; i++) {
       try {
         const diagramCode = mermaidBlocks[i];
-        console.log(`DEBUG: Converting diagram ${i + 1}:`, diagramCode);
+        // Use (i + 1) for logging to match user's expectation of 1-based indexing for source blocks
+        console.log(
+          `DEBUG: Processing source diagram block ${i + 1}:`,
+          diagramCode
+        );
 
         // Check for unsupported diagram types
         const diagramType = this.getDiagramType(diagramCode);
@@ -357,6 +362,7 @@ ${base64EncodedData}
           );
           new Notice(
             `Skipped diagram ${
+              // Log with source block index
               i + 1
             }: ${diagramType} not yet supported by conversion library`
           );
@@ -366,7 +372,10 @@ ${base64EncodedData}
 
         // Preprocess the diagram code to fix known issues
         const processedCode = this.preprocessDiagramCode(diagramCode);
-        console.log(`DEBUG: Processed diagram ${i + 1}:`, processedCode);
+        console.log(
+          `DEBUG: Processed diagram (source block ${i + 1}):`,
+          processedCode
+        );
 
         // Use the same conversion logic as the working command
         const config = {
@@ -383,25 +392,35 @@ ${base64EncodedData}
         // Detailed logging for sequence diagrams
         if (diagramType === "sequence") {
           console.log(
-            `DEBUG: Diagram ${i + 1} (Sequence) - Raw elements from core-lib:`,
+            `DEBUG: Diagram (source block ${
+              i + 1
+            }, Sequence) - Raw elements from core-lib:`,
             JSON.stringify(elements, null, 2)
           );
         } else {
-          console.log(`DEBUG: Diagram ${i + 1} - Raw elements:`, elements);
+          console.log(
+            `DEBUG: Diagram (source block ${i + 1}) - Raw elements:`,
+            elements
+          );
         }
-        console.log(`DEBUG: Diagram ${i + 1} - Raw files:`, files);
+        console.log(
+          `DEBUG: Diagram (source block ${i + 1}) - Raw files:`,
+          files
+        );
 
         // Transform custom elements to proper Excalidraw format
         const transformedElements = transformToExcalidrawElements(
           elements || []
         );
         console.log(
-          `DEBUG: Diagram ${i + 1} - Transformed elements:`,
+          `DEBUG: Diagram (source block ${i + 1}) - Transformed elements:`,
           transformedElements
         );
 
         console.log(
-          `DEBUG: Diagram ${i + 1} - Final files object for Excalidraw:`,
+          `DEBUG: Diagram (source block ${
+            i + 1
+          }) - Final files object for Excalidraw:`,
           files
         ); // Log the files object
 
@@ -424,7 +443,9 @@ ${base64EncodedData}
           }
         }
         console.log(
-          `DEBUG: Diagram ${i + 1} - Remapped files object for Excalidraw:`,
+          `DEBUG: Diagram (source block ${
+            i + 1
+          }) - Remapped files object for Excalidraw:`,
           finalFiles
         );
 
@@ -470,7 +491,8 @@ ${base64EncodedData}
           },
         };
 
-        const fileName = `${baseFileName}-Diagram-${i + 1}.excalidraw.md`;
+        createdDiagramCount++; // Increment counter for successfully processed diagrams
+        const fileName = `${baseFileName}-Diagram-${createdDiagramCount}.excalidraw.md`; // Use new counter for file name
         const jsonString = JSON.stringify(excalidrawData, null, 2);
         const base64EncodedData = LZString.compressToBase64(jsonString);
 
@@ -488,13 +510,22 @@ ${base64EncodedData}
 %%`;
 
         await this.app.vault.create(fileName, fileContent);
-        console.log(`DEBUG: Successfully created file: ${fileName}`);
+        console.log(
+          `DEBUG: Successfully created file: ${fileName} (from source block ${
+            i + 1
+          })`
+        );
         successful++;
         // Add a 1-second delay
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log(`DEBUG: Waited 1 second after diagram ${i + 1}`);
+        console.log(
+          `DEBUG: Waited 1 second after diagram (source block ${i + 1})`
+        );
       } catch (error) {
-        console.error(`ERROR: Failed to convert diagram ${i + 1}:`, error);
+        console.error(
+          `ERROR: Failed to convert diagram (source block ${i + 1}):`,
+          error
+        );
         failed++;
       }
     }
