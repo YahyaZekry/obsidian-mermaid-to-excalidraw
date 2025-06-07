@@ -451,6 +451,9 @@ ${base64EncodedData}
         await this.app.vault.create(fileName, fileContent);
         console.log(`DEBUG: Successfully created file: ${fileName}`);
         successful++;
+        // Add a 1-second delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log(`DEBUG: Waited 1 second after diagram ${i + 1}`);
       } catch (error) {
         console.error(`ERROR: Failed to convert diagram ${i + 1}:`, error);
         failed++;
