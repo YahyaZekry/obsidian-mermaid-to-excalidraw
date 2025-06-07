@@ -1,0 +1,9 @@
+# Node dependencies
+node_modules/
+
+# Build output
+main.js
+
+# Optional: IDE / OS specific files
+.DS_Store
+*.log

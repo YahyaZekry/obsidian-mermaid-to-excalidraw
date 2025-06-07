@@ -1,0 +1,287 @@
+import { App, Plugin, MarkdownPostProcessorContext, Notice, TFile, Modal, PluginSettingTab, Editor, MarkdownView } from 'obsidian';
+import { parseMermaid } from './lib/parser/parseMermaid';
+import { graphToExcalidraw } from './lib/graphToExcalidraw';
+
+interface MermaidToExcalidrawSettings {
+    autoConvert: boolean;
+    defaultFilePath: string;
+}
+
+const DEFAULT_SETTINGS: MermaidToExcalidrawSettings = {
+    autoConvert: false,
+    defaultFilePath: ''
+};
+
+// Confirmation modal for overwriting existing files
+class OverwriteConfirmModal extends Modal {
+    constructor(app: App, private onChoice: (result: boolean) => void) {
+        super(app);
+    }
+
+    onOpen() {
+        const {contentEl} = this;
+        contentEl.setText('The Excalidraw file already exists. Do you want to overwrite it?');
+        
+        const buttonContainer = contentEl.createDiv();
+        buttonContainer.addClass('mermaid-to-excalidraw-modal-buttons');
+        
+        const noButton = buttonContainer.createEl('button', {text: 'No'});
+        noButton.addEventListener('click', () => {
+            this.close();
+            this.onChoice(false);
+        });
+        
+        const yesButton = buttonContainer.createEl('button', {text: 'Yes'});
+        yesButton.addClass('mod-cta');
+        yesButton.addEventListener('click', () => {
+            this.close();
+            this.onChoice(true);
+        });
+    }
+
+    onClose() {
+        const {contentEl} = this;
+        contentEl.empty();
+    }
+}
+
+export default class MermaidToExcalidrawPlugin extends Plugin {
+    settings: MermaidToExcalidrawSettings;
+
+    async onload() {
+        await this.loadSettings();
+
+        // Register the markdown post processor
+        this.registerMarkdownPostProcessor(async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
+            const mermaidBlocks = el.querySelectorAll('code.language-mermaid');
+            
+            for (let i = 0; i < mermaidBlocks.length; i++) {
+                const block = mermaidBlocks[i];
+                if (this.settings.autoConvert) {
+                    await this.convertMermaidToExcalidraw(block.textContent, el, ctx.sourcePath);
+                } else {
+                    // Add convert button
+                    const button = el.createEl('button', {
+                        text: 'Convert to Excalidraw',
+                        cls: 'mermaid-to-excalidraw-button'
+                    });
+                    button.onclick = async () => {
+                        await this.convertMermaidToExcalidraw(block.textContent, el, ctx.sourcePath);
+                    };
+                    block.parentElement?.appendChild(button);
+                }
+            }
+        });
+
+        // Add settings tab
+        this.addSettingTab(new MermaidToExcalidrawSettingTab(this.app, this));
+
+        // Add command to convert selected text
+        this.addCommand({
+            id: 'convert-mermaid-to-excalidraw',
+            name: 'Convert Mermaid to Excalidraw',
+            editorCallback: async (editor: Editor, view: MarkdownView) => {
+                const selection = editor.getSelection();
+                if (selection) {
+                    try {
+                        await this.convertMermaidToExcalidraw(selection, null, view.file?.path || '');
+                        new Notice('Mermaid diagram converted to Excalidraw');
+                    } catch (error) {
+                        new Notice('Error converting Mermaid diagram');
+                        console.error(error);
+                    }
+                }
+            }
+        });
+    }
+
+    onunload() {
+        // Clean up any event listeners or other resources
+    }
+
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+    }
+
+    private async convertMermaidToExcalidraw(mermaidText: string, container: HTMLElement | null, sourcePath: string) {
+        try {
+            // Parse the Mermaid diagram
+            const parsedGraph = await parseMermaid(mermaidText);
+            
+            // Convert to Excalidraw elements
+            const excalidrawData = graphToExcalidraw(parsedGraph);
+            
+            // Create an Excalidraw file
+            await this.createExcalidrawFile(excalidrawData, sourcePath);
+            
+            // Show success message
+            new Notice('Mermaid diagram converted to Excalidraw');
+            
+            // If container exists, update the display with a link to the created file
+            if (container) {
+                const fileName = this.getFileName(sourcePath);
+                const linkEl = container.createDiv({
+                    cls: 'mermaid-to-excalidraw-link',
+                    text: `Converted to Excalidraw: ${fileName}`
+                });
+                
+                // Add a link to open the Excalidraw file
+                const link = linkEl.createEl('a', {
+                    cls: 'internal-link',
+                    text: 'Open Excalidraw'
+                });
+                link.dataset.href = fileName;
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.app.workspace.openLinkText(fileName, sourcePath);
+                });
+            }
+            
+        } catch (error) {
+            console.error('Error converting Mermaid to Excalidraw:', error);
+            new Notice('Error converting Mermaid diagram: ' + (error as Error).message);
+            throw error;
+        }
+    }
+    
+    private async createExcalidrawFile(excalidrawData: any, sourcePath: string) {
+        // Get the file name
+        const fileName = this.getFileName(sourcePath);
+        
+        // Create the Excalidraw file content
+        const content = this.createExcalidrawContent(excalidrawData);
+        
+        // Check if file already exists
+        const existingFile = this.app.vault.getAbstractFileByPath(fileName);
+        if (existingFile instanceof TFile) {
+            // If the file exists, show a modal to confirm overwrite
+            return new Promise<void>((resolve, reject) => {
+                const modal = new OverwriteConfirmModal(this.app, async (result) => {
+                    if (result) {
+                        try {
+                            await this.app.vault.modify(existingFile, content);
+                            resolve();
+                        } catch (error) {
+                            reject(error);
+                        }
+                    } else {
+                        reject(new Error('User cancelled overwrite'));
+                    }
+                });
+                modal.open();
+            });
+        } else {
+            // If the file doesn't exist, create it
+            try {
+                await this.app.vault.create(fileName, content);
+            } catch (error) {
+                console.error('Error creating Excalidraw file:', error);
+                throw error;
+            }
+        }
+    }
+    
+    private getFileName(sourcePath: string): string {
+        // If we have a default path set in settings, use that
+        if (this.settings.defaultFilePath) {
+            return this.settings.defaultFilePath;
+        }
+        
+        // Otherwise, generate a name based on the source file
+        if (sourcePath) {
+            // Get the directory of the source file
+            const lastSlashIndex = sourcePath.lastIndexOf('/');
+            const directory = lastSlashIndex !== -1 
+                ? sourcePath.substring(0, lastSlashIndex + 1) 
+                : '';
+            
+            // Get the filename without extension
+            const fileNameWithExt = sourcePath.substring(lastSlashIndex + 1);
+            const dotIndex = fileNameWithExt.lastIndexOf('.');
+            const fileName = dotIndex !== -1 
+                ? fileNameWithExt.substring(0, dotIndex) 
+                : fileNameWithExt;
+            
+            return `${directory}${fileName}-excalidraw.md`;
+        }
+        
+        // Fallback to a generic name with timestamp
+        return `mermaid-excalidraw-${Date.now()}.md`;
+    }
+    
+    private createExcalidrawContent(excalidrawData: any): string {
+        // Create the Excalidraw file content
+        return `---
+excalidraw-plugin: parsed
+tags: [excalidraw]
+---
+
+# Text Elements
+${this.getTextElements(excalidrawData.elements)}
+
+# Embedded files
+${this.getEmbeddedFiles(excalidrawData.files)}
+
+%%
+# Drawing
+\`\`\`json
+${JSON.stringify(excalidrawData, null, 2)}
+\`\`\`
+%%`;
+    }
+    
+    private getTextElements(elements: any[]): string {
+        // Extract text elements for the frontmatter
+        const textElements = elements.filter(el => el.type === 'text');
+        return textElements.map(el => `${el.text || ''} ${el.id}`).join('\n');
+    }
+    
+    private getEmbeddedFiles(files: any): string {
+        // If no files, return empty string
+        if (!files) return '';
+        
+        // Extract embedded files info
+        return Object.values(files).map((file: any) => 
+            `${file.id}: ${file.mimeType}`
+        ).join('\n');
+    }
+}
+
+class MermaidToExcalidrawSettingTab extends PluginSettingTab {
+    plugin: MermaidToExcalidrawPlugin;
+
+    constructor(app: App, plugin: MermaidToExcalidrawPlugin) {
+        super(app, plugin);
+        this.plugin = plugin;
+    }
+
+    display(): void {
+        const { containerEl } = this;
+        containerEl.empty();
+
+        new Setting(containerEl)
+            .setName('Auto-convert')
+            .setDesc('Automatically convert Mermaid diagrams to Excalidraw')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.autoConvert)
+                .onChange(async (value) => {
+                    this.plugin.settings.autoConvert = value;
+                    await this.plugin.saveSettings();
+                }));
+                
+        new Setting(containerEl)
+            .setName('Default file path')
+            .setDesc('Default path for saved Excalidraw files (leave empty for auto-naming)')
+            .addText(text => text
+                .setPlaceholder('path/to/excalidraw-file.md')
+                .setValue(this.plugin.settings.defaultFilePath)
+                .onChange(async (value) => {
+                    this.plugin.settings.defaultFilePath = value;
+                    await this.plugin.saveSettings();
+                }));
+    }
+}
