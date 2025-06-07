@@ -384,7 +384,7 @@ ${base64EncodedData}
           version: 2,
           source: "obsidian-mermaid-to-excalidraw",
           elements: transformedElements,
-          files: files || {},
+          files: files || {}, // Ensure files is an object
           appState: {
             viewBackgroundColor: "#ffffff",
             currentItemStrokeColor: "#1e1e1e",
