@@ -9,6 +9,7 @@ import {
   Setting,
 } from "obsidian";
 import LZString from "lz-string";
+import { nanoid } from "nanoid"; // Import nanoid
 // import mermaid from 'mermaid'; // Potentially unused if core-lib handles it
 import { parseMermaidToExcalidraw } from "./core-lib"; // Assuming index.ts in core-lib exports this
 
@@ -26,7 +27,7 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
         element
       );
       const imageElement = {
-        id: element.id, // This should be the ID from the core-lib element
+        id: element.id || nanoid(), // Ensure an ID exists, generate if undefined
         type: "image",
         x: element.x || 0,
         y: element.y || 0,
@@ -486,6 +487,7 @@ ${base64EncodedData}
     const unsupportedTypes = [
       "gitgraph", // gitgraph is not recognized by the library
       "class", // class diagrams have lexical parsing issues with relationship syntax
+      "sequence", // Sequence diagrams are complex and current core-lib output is insufficient
     ];
     return unsupportedTypes.includes(diagramType);
   }
