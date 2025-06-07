@@ -7,10 +7,13 @@ This plugin for Obsidian allows you to convert Mermaid.js diagram code blocks in
 ## ✨ Features
 
 - **Full Mermaid Conversion**: Convert any Mermaid diagram to a proper Excalidraw drawing
-- **Text Labels**: All text labels from Mermaid diagrams are preserved and rendered correctly
+- **Bulk Conversion**: Convert all Mermaid diagrams in a file at once with the ribbon icon
+- **Multiple Diagram Types**: Supports flowcharts, sequence diagrams, gantt charts, state diagrams, ER diagrams, pie charts, journey maps, requirement diagrams, timelines, and mindmaps
+- **Smart Image Handling**: Complex diagrams (gantt, pie, etc.) are converted as images for best visual fidelity
+- **Text Labels**: Text labels from supported diagrams are preserved and rendered correctly
 - **Seamless Integration**: Works perfectly with the official Excalidraw plugin
 - **Proper File Format**: Creates compressed `.excalidraw.md` files that are fully compatible
-- **Easy to Use**: Simple command palette interface
+- **Easy to Use**: Simple command palette interface and ribbon icon for bulk operations
 
 ## 🚀 What's New
 
@@ -51,6 +54,8 @@ The original library is licensed under the MIT License, Copyright (c) 2023 Excal
 
 ## 🎯 How to Use
 
+### Single Diagram Conversion
+
 1.  Create or open a note in Obsidian.
 2.  Write your Mermaid diagram code. For example:
     ```
@@ -66,6 +71,31 @@ The original library is licensed under the MIT License, Copyright (c) 2023 Excal
 5.  Type "Convert Mermaid to New Excalidraw File" and select the command.
 6.  A new file (e.g., `Converted-Mermaid-TIMESTAMP.excalidraw.md`) will be created in your vault.
 7.  Open the new file and switch to Excalidraw view to see your converted diagram with full text labels!
+
+### Bulk Conversion (New!)
+
+1.  Open a markdown file containing multiple Mermaid diagrams.
+2.  Click the **workflow icon** (🔄) in the ribbon, or use the command "Convert All Mermaid Diagrams in File".
+3.  The plugin will automatically find and convert all Mermaid code blocks in the file.
+4.  Each diagram will be saved as a separate numbered file: `Filename-Diagram-1.excalidraw.md`, `Filename-Diagram-2.excalidraw.md`, etc.
+5.  A summary notice will show how many diagrams were successfully converted.
+
+## 📊 Supported Diagram Types
+
+| Diagram Type             | Support        | Rendering Method  | Notes                                   |
+| ------------------------ | -------------- | ----------------- | --------------------------------------- |
+| **Flowcharts**           | ✅ Full        | Individual shapes | Includes styling and labels             |
+| **Sequence Diagrams**    | ⚠️ Basic       | Individual shapes | May not render optimally in some cases  |
+| **Gantt Charts**         | ✅ Full        | Single image      | Perfect visual reproduction             |
+| **State Diagrams**       | ✅ Full        | Single image      | Complete state transitions              |
+| **ER Diagrams**          | ✅ Full        | Single image      | Database relationships preserved        |
+| **Pie Charts**           | ✅ Full        | Single image      | Data visualization maintained           |
+| **Journey Maps**         | ✅ Full        | Single image      | User experience flows                   |
+| **Requirement Diagrams** | ✅ Full        | Single image      | System requirements                     |
+| **Timelines**            | ✅ Full        | Single image      | Chronological events                    |
+| **Mindmaps**             | ✅ Full        | Single image      | Hierarchical structures                 |
+| **Class Diagrams**       | 🔄 Processing  | Individual shapes | Recently enabled, may have edge cases   |
+| **Git Graphs**           | ❌ Unsupported | -                 | Not yet supported by conversion library |
 
 ## 🔧 Compatibility
 
