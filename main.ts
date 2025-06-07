@@ -234,7 +234,7 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
         type: "excalidraw",
         version: 2,
         source: "obsidian-mermaid-to-excalidraw",
-        elements: transformedElements, // Use transformed elements
+        elements: transformedElements,
         files: files || {}, // Ensure files is an object
         appState: {
           viewBackgroundColor: "#ffffff",
