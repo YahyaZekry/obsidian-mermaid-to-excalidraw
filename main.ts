@@ -42,12 +42,35 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
       new Notice("Please select a Mermaid code block.");
       return;
     }
+    console.log(
+      "Obsidian Mermaid to Excalidraw: Selected Mermaid code:",
+      mermaidCode
+    ); // DEBUG
     try {
       // Use the actual parseMermaidToExcalidraw function
-      const { elements, files } = await parseMermaidToExcalidraw(mermaidCode, {
-        // Default config or allow customization via settings later
-        // For now, let's use an empty config object or rely on library defaults
-      });
+      const config = {
+        themeVariables: {
+          fontSize: "16px", // Provide a default font size
+        },
+        // You might explore other default configs from the library if needed
+      };
+      console.log(
+        "Obsidian Mermaid to Excalidraw: Calling parseMermaidToExcalidraw with config:",
+        config
+      ); // DEBUG
+      const { elements, files } = await parseMermaidToExcalidraw(
+        mermaidCode,
+        config
+      );
+
+      console.log(
+        "Obsidian Mermaid to Excalidraw: Conversion result - elements:",
+        JSON.stringify(elements, null, 2)
+      ); // DEBUG
+      console.log(
+        "Obsidian Mermaid to Excalidraw: Conversion result - files:",
+        JSON.stringify(files, null, 2)
+      ); // DEBUG
 
       const excalidrawData = {
         type: "excalidraw",
