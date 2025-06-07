@@ -12,6 +12,109 @@ import LZString from "lz-string";
 // import mermaid from 'mermaid'; // Potentially unused if core-lib handles it
 import { parseMermaidToExcalidraw } from "./core-lib"; // Assuming index.ts in core-lib exports this
 
+// Function to transform custom elements to proper Excalidraw format
+function transformToExcalidrawElements(customElements: any[]): any[] {
+  const excalidrawElements: any[] = [];
+
+  for (const element of customElements) {
+    // Add the shape element (without label)
+    const shapeElement = {
+      id: element.id,
+      type: element.type,
+      x: element.x,
+      y: element.y,
+      width: element.width || 0,
+      height: element.height || 0,
+      angle: 0,
+      strokeColor: "#1e1e1e",
+      backgroundColor: "transparent",
+      fillStyle: "solid",
+      strokeWidth: element.strokeWidth || 2,
+      strokeStyle: "solid",
+      roughness: 1,
+      opacity: 100,
+      groupIds: element.groupIds || [],
+      frameId: null,
+      roundness: element.roundness || null,
+      seed: Math.floor(Math.random() * 1000000),
+      versionNonce: Math.floor(Math.random() * 1000000),
+      isDeleted: false,
+      boundElements: null,
+      updated: 1,
+      link: element.link,
+      locked: false,
+    };
+
+    // Handle arrow-specific properties
+    if (element.type === "arrow") {
+      (shapeElement as any).points = element.points || [
+        [0, 0],
+        [0, 0],
+      ];
+      (shapeElement as any).lastCommittedPoint = null;
+      (shapeElement as any).startBinding = element.start
+        ? { elementId: element.start.id, focus: 0, gap: 0 }
+        : null;
+      (shapeElement as any).endBinding = element.end
+        ? { elementId: element.end.id, focus: 0, gap: 0 }
+        : null;
+      (shapeElement as any).startArrowhead = null;
+      (shapeElement as any).endArrowhead = "arrow";
+    }
+
+    excalidrawElements.push(shapeElement);
+
+    // If element has a label, create a separate text element
+    if (element.label && element.label.text) {
+      const textElement = {
+        id: `${element.id}_text`,
+        type: "text",
+        x:
+          element.x +
+          (element.width || 0) / 2 -
+          (element.label.text.length * (element.label.fontSize || 16)) / 4,
+        y:
+          element.y +
+          (element.height || 0) / 2 -
+          (element.label.fontSize || 16) / 2,
+        width: element.label.text.length * (element.label.fontSize || 16) * 0.6,
+        height: element.label.fontSize || 16,
+        angle: 0,
+        strokeColor: "#1e1e1e",
+        backgroundColor: "transparent",
+        fillStyle: "solid",
+        strokeWidth: 2,
+        strokeStyle: "solid",
+        roughness: 1,
+        opacity: 100,
+        groupIds: element.label.groupIds || [],
+        frameId: null,
+        roundness: null,
+        seed: Math.floor(Math.random() * 1000000),
+        versionNonce: Math.floor(Math.random() * 1000000),
+        isDeleted: false,
+        boundElements: null,
+        updated: 1,
+        link: null,
+        locked: false,
+        text: element.label.text,
+        fontSize: element.label.fontSize || 16,
+        fontFamily: 1,
+        textAlign: "center",
+        verticalAlign: "middle",
+        baseline: 13,
+        containerId: element.id,
+        originalText: element.label.text,
+        lineHeight: 1.25,
+      };
+
+      excalidrawElements.push(textElement);
+    }
+  }
+
+  return excalidrawElements;
+}
+
 export default class MermaidToExcalidrawPlugin extends Plugin {
   async onload() {
     this.addCommand({
@@ -73,11 +176,18 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
         JSON.stringify(files, null, 2)
       );
 
+      // Transform custom elements to proper Excalidraw format
+      const transformedElements = transformToExcalidrawElements(elements || []);
+      console.log(
+        "Obsidian Mermaid to Excalidraw: Transformed elements:",
+        JSON.stringify(transformedElements, null, 2)
+      );
+
       const excalidrawData = {
         type: "excalidraw",
         version: 2,
         source: "obsidian-mermaid-to-excalidraw",
-        elements: elements || [], // Ensure elements is an array
+        elements: transformedElements, // Use transformed elements
         files: files || {}, // Ensure files is an object
         appState: {
           viewBackgroundColor: "#ffffff",
