@@ -166,7 +166,10 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
 }
 
 export default class MermaidToExcalidrawPlugin extends Plugin {
+  settings!: MermaidToExcalidrawSettings;
+
   async onload() {
+    await this.loadSettings();
     this.addCommand({
       id: "convert-mermaid-to-excalidraw-new-file", // Changed ID for uniqueness
       name: "Convert Mermaid to New Excalidraw File (MtoE)", // Changed name for uniqueness
@@ -197,6 +200,14 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
     );
 
     this.addSettingTab(new MermaidToExcalidrawSettingTab(this.app, this));
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
   }
 
   async convertMermaidToExcalidraw(editor: Editor, view: MarkdownView) {
@@ -285,7 +296,20 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
         },
       };
 
-      const fileName = `Converted-Mermaid-${Date.now()}.excalidraw.md`;
+      let fileName = `Converted-Mermaid-${Date.now()}.excalidraw.md`;
+      let filePath = fileName;
+
+      // If setting enabled, output to folder named after source file
+      if (this.settings.outputToNamedFolder && view.file) {
+        const baseName = view.file.basename;
+        const folderPath = baseName;
+        fileName = `Converted-Mermaid-${Date.now()}.excalidraw.md`;
+        filePath = `${folderPath}/${fileName}`;
+        // Create folder if it doesn't exist
+        if (!(await this.app.vault.adapter.exists(folderPath))) {
+          await this.app.vault.createFolder(folderPath);
+        }
+      }
 
       const jsonString = JSON.stringify(excalidrawData, null, 2);
       // Use LZString for compression to match Excalidraw's typical format
@@ -304,13 +328,8 @@ tags: [excalidraw]
 ${base64EncodedData}
 \`\`\`
 %%`;
-      // console.log(
-      //   "Obsidian Mermaid to Excalidraw: Attempting to create file:",
-      //   fileName
-      // ); // DEBUG
-      // console.log("Obsidian Mermaid to Excalidraw: File content preview (first 200 chars):", fileContent.substring(0, 200)); // DEBUG
-      await this.app.vault.create(fileName, fileContent);
-      new Notice(`Converted to ${fileName}`);
+      await this.app.vault.create(filePath, fileContent);
+      new Notice(`Converted to ${filePath}`);
     } catch (error) {
       new Notice(`Error converting diagram: ${(error as Error).message}`);
       console.error(error);
@@ -513,7 +532,19 @@ ${base64EncodedData}
         };
 
         createdDiagramCount++; // Increment counter for successfully processed diagrams
-        const fileName = `${baseFileName}-Diagram-${createdDiagramCount}.excalidraw.md`; // Use new counter for file name
+        let fileName = `${baseFileName}-Diagram-${createdDiagramCount}.excalidraw.md`;
+        let filePath = fileName;
+
+        // If setting enabled, output to folder named after source file
+        if (this.settings.outputToNamedFolder && activeView.file) {
+          const folderPath = baseFileName;
+          filePath = `${folderPath}/${fileName}`;
+          // Create folder if it doesn't exist
+          if (!(await this.app.vault.adapter.exists(folderPath))) {
+            await this.app.vault.createFolder(folderPath);
+          }
+        }
+
         const jsonString = JSON.stringify(excalidrawData, null, 2);
         const base64EncodedData = LZString.compressToBase64(jsonString);
 
@@ -530,9 +561,9 @@ ${base64EncodedData}
 \`\`\`
 %%`;
 
-        await this.app.vault.create(fileName, fileContent);
+        await this.app.vault.create(filePath, fileContent);
         console.log(
-          `DEBUG: Successfully created file: ${fileName} (from source block ${
+          `DEBUG: Successfully created file: ${filePath} (from source block ${
             i + 1
           })`
         );
@@ -633,6 +664,14 @@ ${base64EncodedData}
   }
 }
 
+interface MermaidToExcalidrawSettings {
+  outputToNamedFolder: boolean;
+}
+
+const DEFAULT_SETTINGS: MermaidToExcalidrawSettings = {
+  outputToNamedFolder: false,
+};
+
 class MermaidToExcalidrawSettingTab extends PluginSettingTab {
   plugin: MermaidToExcalidrawPlugin;
   constructor(app: App, plugin: MermaidToExcalidrawPlugin) {
@@ -643,6 +682,19 @@ class MermaidToExcalidrawSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h2", { text: "Mermaid to Excalidraw Settings" });
-    // Add settings here if needed
+
+    new Setting(containerEl)
+      .setName("Output to folder named after source file")
+      .setDesc(
+        "If enabled, converted files will be placed in a folder named after the source markdown file (without extension)."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.outputToNamedFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.outputToNamedFolder = value;
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }
