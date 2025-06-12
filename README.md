@@ -114,5 +114,5 @@ The original library is licensed under the MIT License, Copyright (c) 2023 Excal
 
 ## License
 
-This plugin is released under the MIT License. See the `LICENSE` file in the root of the original [mermaid-to-excalidraw project](https://github.com/excalidraw/mermaid-to-excalidraw) (which this plugin is based on and is part of).
-The core conversion library is Copyright (c) 2023 Excalidraw.
+This plugin is released under the MIT License. See the [LICENSE](LICENSE) file for details.
+The core conversion library this plugin utilizes, `@excalidraw/mermaid-to-excalidraw`, is also licensed under the MIT License, Copyright (c) 2023 Excalidraw.
