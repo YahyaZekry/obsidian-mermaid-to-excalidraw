@@ -4,6 +4,8 @@ _Fueled by Yerba Mate and a love for diagrams!_
 
 This plugin for Obsidian allows you to convert Mermaid.js diagram code blocks into fully functional Excalidraw drawings with proper text labels and formatting.
 
+<a href="https://www.buymeacoffee.com/yahyazekry"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=yahyazekry&button_colour=FFDD00&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff" /></a>
+
 ## ✨ Features
 
 - **Full Mermaid Conversion**: Convert any Mermaid diagram to a proper Excalidraw drawing
