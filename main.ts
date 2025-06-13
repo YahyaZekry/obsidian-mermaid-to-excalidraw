@@ -51,7 +51,7 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
         seed: Math.floor(Math.random() * 1000000),
         versionNonce: Math.floor(Math.random() * 1000000),
         isDeleted: false,
-        boundElements: null,
+        boundElements: [], // Changed from null to empty array
         updated: 1,
         link: null,
         locked: false,
@@ -89,7 +89,7 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
       seed: Math.floor(Math.random() * 1000000),
       versionNonce: Math.floor(Math.random() * 1000000),
       isDeleted: false,
-      boundElements: null,
+      boundElements: [], // Changed from null to empty array
       updated: 1,
       link: element.link,
       locked: false,
@@ -143,7 +143,7 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
         seed: Math.floor(Math.random() * 1000000),
         versionNonce: Math.floor(Math.random() * 1000000),
         isDeleted: false,
-        boundElements: null,
+        boundElements: [], // Changed from null to empty array
         updated: 1,
         link: null,
         locked: false,
