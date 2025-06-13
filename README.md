@@ -84,20 +84,20 @@ The original library is licensed under the MIT License, Copyright (c) 2023 Excal
 
 ## 📊 Supported Diagram Types
 
-| Diagram Type             | Support       | Rendering Method  | Notes                                   |
-| ------------------------ | ------------- | ----------------- | --------------------------------------- |
-| **Flowcharts**           | ✅ Full       | Individual shapes | Includes styling and labels             |
-| **Sequence Diagrams**    | ⚠️ Basic      | Individual shapes | May not render optimally in some cases  |
-| **Gantt Charts**         | ✅ Full       | Single image      | Perfect visual reproduction             |
-| **State Diagrams**       | ✅ Full       | Single image      | Complete state transitions              |
-| **ER Diagrams**          | ✅ Full       | Single image      | Database relationships preserved        |
-| **Pie Charts**           | ✅ Full       | Single image      | Data visualization maintained           |
-| **Journey Maps**         | ✅ Full       | Single image      | User experience flows                   |
-| **Requirement Diagrams** | ✅ Full       | Single image      | System requirements                     |
-| **Timelines**            | ✅ Full       | Single image      | Chronological events                    |
-| **Mindmaps**             | ✅ Full       | Single image      | Hierarchical structures                 |
-| **Class Diagrams**       | 🔄 Processing | Individual shapes | Recently enabled, may have edge cases   |
-| **Git Graphs**           | 🔄 Processing | Varies            | Attempting conversion, results may vary |
+| Diagram Type             | Support       | Rendering Method  | Notes                                    |
+| ------------------------ | ------------- | ----------------- | ---------------------------------------- |
+| **Flowcharts**           | ✅ Full       | Individual shapes | Includes styling and labels              |
+| **Sequence Diagrams**    | ⚠️ Basic      | Individual shapes | May not render optimally in some cases   |
+| **Gantt Charts**         | ✅ Full       | Single image      | Perfect visual reproduction              |
+| **State Diagrams**       | ✅ Full       | Single image      | Complete state transitions               |
+| **ER Diagrams**          | ✅ Full       | Single image      | Database relationships preserved         |
+| **Pie Charts**           | ✅ Full       | Single image      | Data visualization maintained            |
+| **Journey Maps**         | ✅ Full       | Single image      | User experience flows                    |
+| **Requirement Diagrams** | ✅ Full       | Single image      | System requirements                      |
+| **Timelines**            | ✅ Full       | Single image      | Chronological events                     |
+| **Mindmaps**             | ✅ Full       | Single image      | Hierarchical structures                  |
+| **Class Diagrams**       | ⚠️ Basic      | Individual shapes | Renders skeleton, text currently missing |
+| **Git Graphs**           | 🔄 Processing | Varies            | Attempting conversion, results may vary  |
 
 ## 🔧 Compatibility
 
