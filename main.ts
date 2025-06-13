@@ -68,7 +68,8 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
     }
 
     // Handle regular shape elements
-    const shapeElement = {
+    let shapeElement: any = {
+      // Use 'any' for flexibility with type-specific properties
       id: element.id,
       type: element.type,
       x: element.x,
@@ -108,8 +109,21 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
       (shapeElement as any).endBinding = element.end
         ? { elementId: element.end.id, focus: 0, gap: 0 }
         : null;
-      (shapeElement as any).startArrowhead = null;
-      (shapeElement as any).endArrowhead = "arrow";
+      (shapeElement as any).startArrowhead = element.startArrowhead || null; // Ensure default if not specified
+      (shapeElement as any).endArrowhead = element.endArrowhead || "arrow"; // Default to arrow if not specified
+    } else if (element.type === "line") {
+      // Ensure 'points' property for line elements
+      (shapeElement as any).points = element.points || [
+        [0, 0],
+        [0, 0],
+      ];
+      // Ensure arrowheads are null for basic lines if not specified
+      (shapeElement as any).startArrowhead = element.startArrowhead || null;
+      (shapeElement as any).endArrowhead = element.endArrowhead || null;
+    } else if (element.type === "frame") {
+      // Ensure 'children' property for frame elements
+      shapeElement.name = element.name || ""; // Frames have names
+      shapeElement.children = element.children || []; // Ensure children is an array
     }
 
     excalidrawElements.push(shapeElement);
