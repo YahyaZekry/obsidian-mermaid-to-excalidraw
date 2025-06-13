@@ -3,7 +3,7 @@
   "name": "Mermaid to Excalidraw Converter",
   "version": "1.0.0",
   "minAppVersion": "1.0.0",
-  "description": "Converts Mermaid diagrams to Excalidraw drawings in Obsidian. Supports single diagram conversion (select code block and use command) and bulk conversion of all diagrams in a file (ribbon icon or command).",
+  "description": "Converts Mermaid diagrams to Excalidraw drawings. Supports single diagram conversion (select code block and use command) and bulk conversion of all diagrams in a file (ribbon icon or command).",
   "author": "Yahya Zekry",
   "authorUrl": "https://github.com/YahyaZekry",
   "fundingUrl": "https://buymeacoffee.com/yahyazekry",
