@@ -7,6 +7,7 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
+  normalizePath,
 } from "obsidian";
 import LZString from "lz-string";
 import { nanoid } from "nanoid"; // Import nanoid
@@ -18,14 +19,14 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
   const excalidrawElements: any[] = [];
 
   for (const element of customElements) {
-    console.log("DEBUG: Processing element:", element);
+    // console.log("DEBUG: Processing element:", element); // Removed DEBUG log
 
     // Handle image elements (for gantt, pie, etc. that render as images)
     if (element.type === "image") {
-      console.log(
-        `DEBUG: Image element found. Original fileId: ${element.fileId}. Original element.id: ${element.id}`,
-        element
-      );
+      // console.log(
+      //   `DEBUG: Image element found. Original fileId: ${element.fileId}. Original element.id: ${element.id}`,
+      //   element
+      // ); // Removed DEBUG log
       const newElementId = element.id || nanoid(); // ID for the Excalidraw element itself
       const newFileId = nanoid(); // New FileId for Excalidraw's internal file referencing
 
@@ -59,10 +60,10 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
         scale: [1, 1],
         originalFileId: element.fileId, // Store original to re-map files object later
       };
-      console.log(
-        "DEBUG: Created Excalidraw image element (pre-file-remapping):",
-        imageElement
-      );
+      // console.log(
+      //   "DEBUG: Created Excalidraw image element (pre-file-remapping):",
+      //   imageElement
+      // ); // Removed DEBUG log
       excalidrawElements.push(imageElement);
       continue;
     }
@@ -234,7 +235,7 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
     // console.log(
     //   "Obsidian Mermaid to Excalidraw: Selected Mermaid code:",
     //   mermaidCode
-    // );
+    // ); // Kept this commented out log as it's not a "DEBUG:" one
     try {
       // Use the actual parseMermaidToExcalidraw function
       const config = {
@@ -246,7 +247,7 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
       // console.log(
       //   "Obsidian Mermaid to Excalidraw: Calling parseMermaidToExcalidraw with config:",
       //   config
-      // );
+      // ); // Kept this commented out log
       const { elements, files } = await parseMermaidToExcalidraw(
         mermaidCode,
         config
@@ -255,18 +256,18 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
       // console.log(
       //   "Obsidian Mermaid to Excalidraw: Conversion result - elements:",
       //   JSON.stringify(elements, null, 2)
-      // );
+      // ); // Kept this commented out log
       // console.log(
       //   "Obsidian Mermaid to Excalidraw: Conversion result - files:",
       //   JSON.stringify(files, null, 2)
-      // );
+      // ); // Kept this commented out log
 
       // Transform custom elements to proper Excalidraw format
       const transformedElements = transformToExcalidrawElements(elements || []);
       // console.log(
       //   "Obsidian Mermaid to Excalidraw: Transformed elements:",
       //   JSON.stringify(transformedElements, null, 2)
-      // );
+      // ); // Kept this commented out log
 
       const excalidrawData = {
         type: "excalidraw",
@@ -316,13 +317,18 @@ export default class MermaidToExcalidrawPlugin extends Plugin {
       // If setting enabled, output to folder named after source file
       if (this.settings.outputToNamedFolder && view.file) {
         const baseName = view.file.basename;
-        const folderPath = baseName;
+        const folderPath = baseName; // folderPath is just the basename, will be created in current dir
         fileName = `Converted-Mermaid-${Date.now()}.excalidraw.md`;
-        filePath = `${folderPath}/${fileName}`;
+        // Ensure the folder path is normalized, though for a simple basename it might not change much
+        const normalizedFolderPath = normalizePath(folderPath);
+        filePath = normalizePath(`${normalizedFolderPath}/${fileName}`);
         // Create folder if it doesn't exist
-        if (!(await this.app.vault.adapter.exists(folderPath))) {
-          await this.app.vault.createFolder(folderPath);
+        if (!(await this.app.vault.adapter.exists(normalizedFolderPath))) {
+          await this.app.vault.createFolder(normalizedFolderPath);
         }
+      } else {
+        // Ensure filePath is normalized even if not in a subfolder
+        filePath = normalizePath(fileName);
       }
 
       const jsonString = JSON.stringify(excalidrawData, null, 2);
@@ -360,11 +366,11 @@ ${base64EncodedData}
 
     // Get file content
     const fileContent = activeView.editor.getValue();
-    console.log("DEBUG: Full file content:", fileContent);
+    // console.log("DEBUG: Full file content:", fileContent); // Removed DEBUG log
 
     // Find all Mermaid blocks
     const mermaidBlocks = this.extractMermaidBlocks(fileContent);
-    console.log("DEBUG: Found mermaid blocks:", mermaidBlocks);
+    // console.log("DEBUG: Found mermaid blocks:", mermaidBlocks); // Removed DEBUG log
 
     if (mermaidBlocks.length === 0) {
       new Notice("No Mermaid diagrams found in this file");
@@ -385,17 +391,17 @@ ${base64EncodedData}
       try {
         const diagramCode = mermaidBlocks[i];
         // Use (i + 1) for logging to match user's expectation of 1-based indexing for source blocks
-        console.log(
-          `DEBUG: Processing source diagram block ${i + 1}:`,
-          diagramCode
-        );
+        // console.log(
+        //   `DEBUG: Processing source diagram block ${i + 1}:`,
+        //   diagramCode
+        // ); // Removed DEBUG log
 
         // Check for unsupported diagram types
         const diagramType = this.getDiagramType(diagramCode);
         if (this.isUnsupportedDiagramType(diagramType)) {
-          console.log(
-            `DEBUG: Skipping unsupported diagram type: ${diagramType}`
-          );
+          // console.log(
+          //   `DEBUG: Skipping unsupported diagram type: ${diagramType}`
+          // ); // Removed DEBUG log
           new Notice(
             `Skipped diagram ${
               // Log with source block index
@@ -408,10 +414,10 @@ ${base64EncodedData}
 
         // Preprocess the diagram code to fix known issues
         const processedCode = this.preprocessDiagramCode(diagramCode);
-        console.log(
-          `DEBUG: Processed diagram (source block ${i + 1}):`,
-          processedCode
-        );
+        // console.log(
+        //   `DEBUG: Processed diagram (source block ${i + 1}):`,
+        //   processedCode
+        // ); // Removed DEBUG log
 
         // Use the same conversion logic as the working command
         const config = {
@@ -432,51 +438,51 @@ ${base64EncodedData}
           elements.length > 5 &&
           !files
         ) {
-          console.log(
-            `DEBUG: Sequence diagram (source block ${i + 1}) has ${
-              elements.length
-            } elements but no files - this suggests individual shapes rather than a single image. This may not render well.`
-          );
+          // console.log(
+          //   `DEBUG: Sequence diagram (source block ${i + 1}) has ${
+          //     elements.length
+          //   } elements but no files - this suggests individual shapes rather than a single image. This may not render well.`
+          // ); // Removed DEBUG log
           // For now, we'll continue with the transformation, but this identifies the issue
         }
 
         // Detailed logging for sequence diagrams
-        if (diagramType === "sequence") {
-          console.log(
-            `DEBUG: Diagram (source block ${
-              i + 1
-            }, Sequence) - Raw elements from core-lib:`,
-            elements?.length || 0,
-            "elements"
-          );
-        } else {
-          console.log(
-            `DEBUG: Diagram (source block ${i + 1}) - Raw elements:`,
-            elements?.length || 0,
-            "elements"
-          );
-        }
-        console.log(
-          `DEBUG: Diagram (source block ${i + 1}) - Raw files:`,
-          files ? Object.keys(files).length : 0,
-          "files"
-        );
+        // if (diagramType === "sequence") {
+        //   console.log(
+        //     `DEBUG: Diagram (source block ${
+        //       i + 1
+        //     }, Sequence) - Raw elements from core-lib:`,
+        //     elements?.length || 0,
+        //     "elements"
+        //   );
+        // } else {
+        //   console.log(
+        //     `DEBUG: Diagram (source block ${i + 1}) - Raw elements:`,
+        //     elements?.length || 0,
+        //     "elements"
+        //   );
+        // } // Removed DEBUG log
+        // console.log(
+        //   `DEBUG: Diagram (source block ${i + 1}) - Raw files:`,
+        //   files ? Object.keys(files).length : 0,
+        //   "files"
+        // ); // Removed DEBUG log
 
         // Transform custom elements to proper Excalidraw format
         const transformedElements = transformToExcalidrawElements(
           elements || []
         );
-        console.log(
-          `DEBUG: Diagram (source block ${i + 1}) - Transformed elements:`,
-          transformedElements
-        );
+        // console.log(
+        //   `DEBUG: Diagram (source block ${i + 1}) - Transformed elements:`,
+        //   transformedElements
+        // ); // Removed DEBUG log
 
-        console.log(
-          `DEBUG: Diagram (source block ${
-            i + 1
-          }) - Final files object for Excalidraw:`,
-          files
-        ); // Log the files object
+        // console.log(
+        //   `DEBUG: Diagram (source block ${
+        //     i + 1
+        //   }) - Final files object for Excalidraw:`,
+        //   files
+        // ); // Removed DEBUG log
 
         // Re-map the files object to use the new fileIds generated for image elements
         const finalFiles: Record<string, any> = {};
@@ -551,12 +557,17 @@ ${base64EncodedData}
 
         // If setting enabled, output to folder named after source file
         if (this.settings.outputToNamedFolder && activeView.file) {
-          const folderPath = baseFileName;
-          filePath = `${folderPath}/${fileName}`;
+          const folderPath = baseFileName; // folderPath is just the basename
+          // Ensure the folder path is normalized
+          const normalizedFolderPath = normalizePath(folderPath);
+          filePath = normalizePath(`${normalizedFolderPath}/${fileName}`);
           // Create folder if it doesn't exist
-          if (!(await this.app.vault.adapter.exists(folderPath))) {
-            await this.app.vault.createFolder(folderPath);
+          if (!(await this.app.vault.adapter.exists(normalizedFolderPath))) {
+            await this.app.vault.createFolder(normalizedFolderPath);
           }
+        } else {
+          // Ensure filePath is normalized even if not in a subfolder
+          filePath = normalizePath(fileName);
         }
 
         const jsonString = JSON.stringify(excalidrawData, null, 2);
@@ -576,17 +587,17 @@ ${base64EncodedData}
 %%`;
 
         await this.app.vault.create(filePath, fileContent);
-        console.log(
-          `DEBUG: Successfully created file: ${filePath} (from source block ${
-            i + 1
-          })`
-        );
+        // console.log(
+        //   `DEBUG: Successfully created file: ${filePath} (from source block ${
+        //     i + 1
+        //   })`
+        // ); // Removed DEBUG log
         successful++;
         // Add a 1-second delay
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log(
-          `DEBUG: Waited 1 second after diagram (source block ${i + 1})`
-        );
+        // console.log(
+        //   `DEBUG: Waited 1 second after diagram (source block ${i + 1})`
+        // ); // Removed DEBUG log
       } catch (error) {
         console.error(
           `ERROR: Failed to convert diagram (source block ${i + 1}):`,
@@ -651,7 +662,7 @@ ${base64EncodedData}
       // Ensure proper line endings
       processedCode = processedCode.replace(/\r\n/g, "\n");
 
-      console.log("DEBUG: Applied comprehensive class diagram fixes");
+      // console.log("DEBUG: Applied comprehensive class diagram fixes"); // Removed DEBUG log
     }
 
     return processedCode;
@@ -663,17 +674,17 @@ ${base64EncodedData}
     const blocks: string[] = [];
     let match;
 
-    console.log("DEBUG: Starting regex search for mermaid blocks");
+    // console.log("DEBUG: Starting regex search for mermaid blocks"); // Removed DEBUG log
 
     while ((match = mermaidRegex.exec(content)) !== null) {
       const diagramContent = match[1].trim();
-      console.log("DEBUG: Found mermaid block:", diagramContent);
+      // console.log("DEBUG: Found mermaid block:", diagramContent); // Removed DEBUG log
       if (diagramContent) {
         blocks.push(diagramContent);
       }
     }
 
-    console.log("DEBUG: Total blocks found:", blocks.length);
+    // console.log("DEBUG: Total blocks found:", blocks.length); // Removed DEBUG log
     return blocks;
   }
 }
