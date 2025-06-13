@@ -609,8 +609,8 @@ ${base64EncodedData}
 
   isUnsupportedDiagramType(diagramType: string): boolean {
     // List of diagram types that are known to have issues with the conversion library
-    const unsupportedTypes = [
-      "gitgraph", // gitgraph is not recognized by the library
+    const unsupportedTypes: string[] = [
+      // "gitgraph", // gitgraph is not recognized by the library - Re-enabling for testing
       // Removed "class" - will attempt to process class diagrams
       // Removed "sequence" - will process as images if core-lib provides them
     ];
