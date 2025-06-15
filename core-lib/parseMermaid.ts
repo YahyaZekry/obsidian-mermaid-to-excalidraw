@@ -61,7 +61,30 @@ export const parseMermaid = async (
     "style",
     `opacity: 0; position: relative; z-index: -1;`
   );
-  svgContainer.innerHTML = svg;
+  // svgContainer.innerHTML = svg; // Replaced for security
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(svg, "image/svg+xml");
+  const parsedSvgElement = svgDoc.documentElement;
+
+  if (
+    parsedSvgElement &&
+    parsedSvgElement.tagName.toLowerCase() === "svg" &&
+    !parsedSvgElement.querySelector("parsererror")
+  ) {
+    svgContainer.appendChild(parsedSvgElement);
+  } else {
+    console.error(
+      "Failed to parse SVG string from Mermaid render or SVG contains parser error. SVG content:",
+      svg
+    );
+    // Fallback or throw error if critical, for now, container might be empty or have error message
+    // To avoid breaking existing logic that expects an SVG, we can append the raw string if parsing fails,
+    // though this re-introduces the risk. A better approach would be to ensure mermaid.render produces safe SVG
+    // or to have a robust SVG sanitizer. For now, let's log and proceed with potentially empty container.
+    // If an error is thrown here, the function would exit.
+    // throw new Error("Failed to parse SVG from Mermaid render");
+  }
+
   svgContainer.id = "mermaid-diagram";
   document.body.appendChild(svgContainer);
   let data;

@@ -8,6 +8,7 @@ import {
   PluginSettingTab,
   Setting,
   normalizePath,
+  TFile, // Added TFile
 } from "obsidian";
 import LZString from "lz-string";
 import { nanoid } from "nanoid"; // Import nanoid
@@ -99,28 +100,28 @@ function transformToExcalidrawElements(customElements: any[]): any[] {
 
     // Handle arrow-specific properties
     if (element.type === "arrow") {
-      (shapeElement as any).points = element.points || [
+      shapeElement.points = element.points || [
         [0, 0],
         [0, 0],
       ];
-      (shapeElement as any).lastCommittedPoint = null;
-      (shapeElement as any).startBinding = element.start
+      shapeElement.lastCommittedPoint = null;
+      shapeElement.startBinding = element.start
         ? { elementId: element.start.id, focus: 0, gap: 0 }
         : null;
-      (shapeElement as any).endBinding = element.end
+      shapeElement.endBinding = element.end
         ? { elementId: element.end.id, focus: 0, gap: 0 }
         : null;
-      (shapeElement as any).startArrowhead = element.startArrowhead || null; // Ensure default if not specified
-      (shapeElement as any).endArrowhead = element.endArrowhead || "arrow"; // Default to arrow if not specified
+      shapeElement.startArrowhead = element.startArrowhead || null; // Ensure default if not specified
+      shapeElement.endArrowhead = element.endArrowhead || "arrow"; // Default to arrow if not specified
     } else if (element.type === "line") {
       // Ensure 'points' property for line elements
-      (shapeElement as any).points = element.points || [
+      shapeElement.points = element.points || [
         [0, 0],
         [0, 0],
       ];
       // Ensure arrowheads are null for basic lines if not specified
-      (shapeElement as any).startArrowhead = element.startArrowhead || null;
-      (shapeElement as any).endArrowhead = element.endArrowhead || null;
+      shapeElement.startArrowhead = element.startArrowhead || null;
+      shapeElement.endArrowhead = element.endArrowhead || null;
     } else if (element.type === "frame") {
       // Ensure 'children' property for frame elements
       shapeElement.name = element.name || ""; // Frames have names
@@ -348,8 +349,16 @@ tags: [excalidraw]
 ${base64EncodedData}
 \`\`\`
 %%`;
-      await this.app.vault.create(filePath, fileContent);
+      const newFile = await this.app.vault.create(filePath, fileContent);
       new Notice(`Converted to ${filePath}`);
+
+      // Explicitly open the new file in a new leaf
+      if (newFile instanceof TFile) {
+        const newLeaf = this.app.workspace.getLeaf("tab");
+        await newLeaf.openFile(newFile);
+        // Ensure the new leaf is focused.
+        this.app.workspace.setActiveLeaf(newLeaf, { focus: true });
+      }
     } catch (error) {
       new Notice(`Error converting diagram: ${(error as Error).message}`);
       console.error(error);

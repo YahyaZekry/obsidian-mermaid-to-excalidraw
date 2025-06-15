@@ -30,10 +30,13 @@ export const graphToExcalidraw = (
     }
 
     default: {
+      // Safely access type for error reporting, and update the error message
+      const graphType =
+        typeof graph === "object" && graph !== null && "type" in graph
+          ? String((graph as { type: unknown }).type)
+          : "unknown type (input was not a recognized graph object)";
       throw new Error(
-        `graphToExcalidraw: unknown graph type "${
-          (graph as any).type
-        }, only flowcharts are supported!"`
+        `graphToExcalidraw: unknown or unsupported graph type "${graphType}". Supported types are 'flowchart-v2', 'sequence', 'classDiagram', and 'graphImage'.`
       );
     }
   }

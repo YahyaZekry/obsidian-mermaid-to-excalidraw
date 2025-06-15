@@ -11,9 +11,33 @@ export const entityCodesToText = (input: string): string => {
     .replace(/#([a-z]+);/g, "&$1;");
 
   // Render the decimal code as html character, eg &#9829; => ♥
-  const element = document.createElement("textarea");
-  element.innerHTML = inputWithDecimalCode;
-  return element.value;
+  // Using DOMParser to safely decode HTML entities
+  if (typeof DOMParser !== "undefined") {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(inputWithDecimalCode, "text/html");
+    return doc.body.textContent || "";
+  } else {
+    // Fallback for environments without DOMParser (e.g., very old browsers or specific Node.js setups)
+    // This is a simplified fallback and might not cover all HTML entities perfectly.
+    // For a more robust server-side or non-DOM solution, a dedicated library would be better.
+    console.warn(
+      "DOMParser not available for entity decoding, using simplified fallback."
+    );
+    let text = inputWithDecimalCode;
+    text = text
+      .replace(/</g, "<")
+      .replace(/>/g, ">")
+      .replace(/&/g, "&")
+      .replace(/"/g, '"')
+      .replace(/&#39;/g, "'");
+    // Basic numeric entities
+    text = text.replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
+    // Basic hex entities
+    text = text.replace(/&#x([0-9A-Fa-f]+);/g, (match, hex) =>
+      String.fromCharCode(parseInt(hex, 16))
+    );
+    return text;
+  }
 };
 
 export const getTransformAttr = (el: Element) => {
